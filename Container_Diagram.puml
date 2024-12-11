@@ -19,41 +19,50 @@ Boundary(b2, "Outsource") {
     System_Ext(se2, "Web Application", "User Interface, разрабатывается на outsource")
 }
 
+Boundary(cp ,"Cloud Provider") {
+    ContainerDb_Ext(dbVideoS3, "Video Storage", "S3")
+}
+
 System_Boundary(b3, "Теплый Дом") {
-    Container(DeviceManagement, "Device Management Service", "", "Facade for Public API")
-    Container(ScenarioManagement, "Scenario Management Service", "")
-    Container(UserManagement, "User Management Service", "")
-    Container(ApiGateway, "Api Gateway", "Public API")
-    Container(SensorManagement, "Sensor Management Service", "")
-    Container(VideoManagement, "Video Device Management Service", "")
-    Container(SwitchManagement, "Switch Device Management Service", "")
-        ContainerQueue(Bus, "Message Bus", "", "Sensor Queue, Command Queue, etc")
-    ContainerDb(dbUser, "User Management\nDB")
-    ContainerDb(dbScenario, "Scenario Management\nDB")
-    ContainerDb(dbVideo, "Video Device Management\nDB")
-    ContainerDb(dbSensor, "Sensor Device Management\nDB")
-    ContainerDb(dbSwitch, "Switch Device Management\nDB")
+    Container(DeviceManagement, "Device Management Service", "Go", "Facade for Public API")
+    Container(ScenarioManagement, "Scenario Management Service", "Go")
+    Container(UserManagement, "User Management Service", "Go")
+    Container(ApiGateway, "Api Gateway", "KrakenD","Public API")
+    Boundary(DeviceServices, "Device Services", "Device Specific Business Logic") {
+        Container(SensorManagement, "Sensor Management Service", "Java")
+        Container(VideoManagement, "Video Device Management Service", "Java")
+        Container(SwitchManagement, "Switch Device Management Service", "Java")
+        ContainerDb(dbVideo, "Video Device Management\nDB", "MongoDB")
+        ContainerDb(dbSensor, "Sensor Device Management\nDB", "Time series database")
+        ContainerDb(dbSwitch, "Switch Device Management\nDB", "MongoDB")
+    }
+    ContainerQueue(Bus, "Message Bus", "Kafka", "Sensor Queue, Command Queue, etc")
+    ContainerDb(dbUser, "User Management\nDB", "PostgresSQL")
+    ContainerDb(dbScenario, "Scenario Management\nDB", "PostgresSQL")
+
 
 ' region relationships
-    Rel(DeviceManagement,VideoManagement, "read", "HLS (HTTP Live Streaming) & http")
-    Rel(DeviceManagement,SwitchManagement, "read", "http")
-    Rel(UserManagement,dbUser,"read/write", "SQL/TCP")
-    Rel_R(ScenarioManagement,dbScenario,"read/write", "SQL/TCP")
-    Rel(SensorManagement,dbSensor,"read/write", "SQL/TCP")
-    Rel(VideoManagement,dbVideo,"read/write", "SQL/TCP")
-    Rel(SwitchManagement,dbSwitch,"read/write", "SQL/TCP")
+    Rel(DeviceManagement,DeviceServices, "read", "HLS (HTTP Live Streaming) & http")
+'    Rel(DeviceManagement,SwitchManagement, "read", "http")
+    Rel_R(UserManagement,dbUser,"read/write", "SQL/TCP")
+    Lay_L(DeviceManagement, ScenarioManagement)
+    Rel_L(ScenarioManagement,dbScenario,"read/write", "SQL/TCP")
+    Rel(SensorManagement,dbSensor,"read/write", "TCP")
+    Rel(VideoManagement,dbVideo,"read/write", "TCP")
+    Rel_R(DeviceServices,dbVideoS3,"read/write", "TCP", "In order to support the Video Records as an additional feature")
+    Rel(SwitchManagement,dbSwitch,"read/write", "TCP")
     Rel_R(ApiGateway, UserManagement, "get/refresh/validate authorisation", "http")
     Rel(ApiGateway,ScenarioManagement, "read/write", "http", "Internal Api")
     Rel(ApiGateway,DeviceManagement, "read/write", "http", "Internal Api")
     Rel_U(SensorManagement, Bus, "Publish Sensor updates", "TCP",)
-    Rel(ScenarioManagement, Bus, "Listen Sensor updates", "TCP", "Listen for triggering scenarios")
-    Rel(ScenarioManagement, Bus, "Publish", "TCP", "Publish Run Scenario Command")
-    Rel(SwitchManagement, Bus, "Listen Commands", "TCP")
-    Rel(VideoManagement, Bus, "Listen Commands", "TCP")
-    Rel_L(DeviceManagement, Bus, "Listen and Publish" , "TCP", "Publish command update configuration \n/ Listen sensor update")
-    Rel(SensorManagement, se1,   "Get Sensor Data (pull query)", "http")
-    Rel(SwitchManagement, se1 , "Send Signal to Switch", "http")
+    Rel(ScenarioManagement, Bus, "Listen & Publish", "TCP", "Listen Sensor Updates\n for triggering\n scenarios and publish Run Scenario Commands ")
+    Rel_U(SwitchManagement, Bus, "Listen Commands", "TCP")
+    Rel_U(VideoManagement, Bus, "Listen Commands", "TCP")
+    Rel(DeviceManagement, Bus, "Publish" , "TCP", "Publish command update configuration")
+    Rel(DeviceServices, se1,  "read/write", "http", "Get Sensor Data (pull query) & Send Signal to Switch & Video Streaming, etc")
+'    Rel(DeviceServices, se1 , "Send Signal to Switch", "http")
     Rel(se2, ApiGateway, "Listen sensor Update", "http")
+'    Rel(DeviceManagement, SensorManagement, "read", "http")
 ' endregion
 }
 
