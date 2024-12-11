@@ -47,8 +47,8 @@ package CommandContract {
 class HttpClient
 class EventProducer
 CommandDto <- CommandComponent : creates
-HttpClientInterface <|-- HttpClient
-CommandInterface <|-left- EventProducer
+HttpClientInterface <|.. HttpClient
+CommandInterface <|.left. EventProducer
 CommandComponent o-- CommandInterface
 ApiController o-- CommandComponent : используется для обновления\nконфигураций устройств
 

@@ -1,0 +1,132 @@
+@startuml
+title ER Diagram
+
+entity User {
+    id int
+}
+
+entity FamilyGroup {
+    id int
+    name string
+    ownerId int
+}
+
+User "1"--"1..N" FamilyGroup
+
+
+entity Room {
+    id int
+    address string
+    familyGroupId int
+}
+
+abstract Device {
+    roomId int
+    serialNumber string
+}
+
+entity VideoDevice {
+    id int
+    targetValue int
+    currentValue int
+    status StatusType
+}
+
+entity RecordRule {
+    id int
+    deviceId int
+    timeToStore DateTime
+}
+
+VideoDevice "1" -- "0..N" RecordRule
+
+entity Record {
+    ruleId int
+    pathToFile string
+    createdAt DateTime
+}
+
+RecordRule "1" -- "0..N" Record
+
+entity Stream {
+    deviceId int
+    startDate DateTime
+    endDate DateTime
+}
+
+VideoDevice "1" -- "0..N" Stream
+
+entity SwitchDevice {
+    targetValue int
+    currentValue int
+    status StatusType
+}
+enum StatusType {
+    on
+    initialization
+    updating
+    error
+    off
+}
+entity SensorDevice {
+    id int
+    currentValue int
+    pullDataInterval DateTimeInterval
+    lastUpdatedAt DateTime
+}
+
+SwitchDevice *-- StatusType
+VideoDevice *-- StatusType
+
+Device <|-- SensorDevice
+Device <|-- SwitchDevice
+Device <|-- VideoDevice
+
+FamilyGroup "1"--"0..N" Room
+Room "1"--"0..N" Device
+
+entity Telemetry {
+    deviceId int
+    value int
+    type TelemetryType
+    createdAt DateTime
+}
+
+
+enum TelemetryType {
+    Counter
+    Gauge
+    Histogram
+}
+
+TelemetryType -* Telemetry
+
+SensorDevice "1"--"0..N" Telemetry
+
+entity Scenario {
+    id int
+    familyId int
+    name string
+}
+entity Trigger {
+    id int
+    type TriggerType
+}
+
+enum TriggerType {
+    sensorData
+    dateTime
+}
+entity Action {
+    id int
+    switchId int
+    targetValue int
+}
+
+SwitchDevice "1" -- "0..N" Action
+Scenario "0..N" -- "0..N" Trigger
+Scenario "0..N" -- "0..N" Action
+FamilyGroup "1" -- "0..N" Scenario
+Trigger *-- TriggerType
+
+@enduml
