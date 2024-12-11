@@ -1,0 +1,38 @@
+@startuml
+title Context Model
+
+top to bottom direction
+
+!include C4.puml
+!include C4_Container.puml
+!include C4_Context.puml
+!include C4_Component.puml
+
+Enterprise_Boundary(e1, "Теплый дом") {
+    System_Boundary(c1, "Subdomain: Sensor Device Management") {
+        System(s1, "Context: Sensor Registration")
+        System(s2, "Context: Sensor Data Receiving")
+    }
+    System_Boundary(c2, "Subdomain: Switching Device Management") {
+        System(s3, "Context: Switch Registration", "Добавление нового устройства с типом Реле")
+        System(s4, "Context: Switch State Configuration", "Установка целевого значения для Реле")
+    }
+    System_Boundary(c3, "Subdomain: Video Device Management") {
+        System(s5, "Context: Video Device Registration")
+        System(s6, "Context: Video Device Registration State Configuration")
+        System(s7, "Context: Video Streaming")
+    }
+    System_Boundary(c4, "Subdomain: Scenario Management") {
+        System(s8, "Context: Scenario Configuration")
+        System(s9, "Context: Scenario Running")
+    }
+    System_Boundary(c5, "Subdomain: Trigger Management") {
+        System(s10, "Context: Trigger Configuration")
+        System(s11, "Context: Trigger Monitoring")
+    }
+    System_Boundary(c6, "Subdomain: User Management") {
+        System(s12, "Context: User Authentication")
+        System(s13, "Context: Access Control")
+    }
+}
+@enduml
