@@ -1,0 +1,108 @@
+@startuml
+title Component Diagram Device Management
+
+top to bottom direction
+
+!include C4.puml
+!include C4_Container.puml
+!include C4_Context.puml
+!include C4_Component.puml
+
+System_Ext(se1, "Sensors", "Сенсоры")
+System_Ext(se2, "Switches", "Реле")
+System_Ext(se3, "Video Devices", "Видеокамеры")
+
+ContainerDb_Ext(dbVideoS3, "Video Storage", "S3")
+
+ContainerDb(dbVideo, "Video Device Management\nDB", "MongoDB")
+ContainerDb(dbSensor, "Sensor Device Management\nDB", "Time series database")
+ContainerDb(dbSwitch, "Switch Device Management\nDB", "MongoDB")
+Container(ApiGateway, "Api Gateway", "KrakenD","Public API")
+Container(ScenarioManagement, "Scenario Management Service", "Go")
+
+
+Boundary(asdf, "Device Management Services") {
+    Container_Boundary(Bus, "Message Bus") {
+        ComponentQueue(SensorQueue, "Sensor Queue")
+        ComponentQueue(CommandQueue, "Command Queue")
+    }
+    Container_Boundary(DeviceManagement, "Device Management Service", "Go", "Facade for Public API") {
+        Component(DeviceManagementCommandComponent, "Command Component")
+        Component(DeviceManagementApiComposition, "Api Composition Component")
+        Component(DeviceManagementApiController, "Api Controller")
+        Rel(DeviceManagementApiController, DeviceManagementCommandComponent, "uses")
+        Rel(DeviceManagementApiController, DeviceManagementApiComposition, "uses")
+    }
+    Boundary(DeviceServices, "Device Services (Adapters)", "Device Specific Business Logic", ) {
+        Container_Boundary(SensorManagement, "Sensor Management Service", "Java") {
+            Component(SensorManagementApiController, "Api Controller")
+            Component(SensorManagementDeviceAccessLayer, "Sensor Device Access Layer")
+            Component(SensorManagementConfigurationComponent, "Device Configuration Component")
+            Component(SensorManagementCommandConsumer, "Command Consumer")
+            Component(SensorManagementEventProducer, "Sensor Data Event Producer")
+            Component(SensorManagementManagementDBAL, "DB Access Layer")
+
+
+            Rel(SensorManagementApiController, SensorManagementConfigurationComponent, "uses")
+            Rel(SensorManagementCommandConsumer, SensorManagementConfigurationComponent, "uses")
+            Rel_D(SensorManagementConfigurationComponent, SensorManagementDeviceAccessLayer , "uses")
+            Rel_D(SensorManagementConfigurationComponent,SensorManagementManagementDBAL,"uses")
+            Rel_D(SensorManagementManagementDBAL,dbSensor,"read/write", "TCP")
+            Rel_U(SensorManagementCommandConsumer, CommandQueue, "Listen Commands", "TCP")
+            Rel_D(SensorManagementDeviceAccessLayer, se1,  "read/write", "http", "Get Sensor Data (pull query)")
+            Rel_U(SensorManagementEventProducer, SensorQueue, "Publish Sensor updates", "TCP",)
+            Rel(SensorManagementEventProducer, SensorManagementDeviceAccessLayer, "uses",)
+        }
+        Container_Boundary(VideoManagement, "Video Device Management Service", "Java") {
+            Component(VideoManagementApiController, "Api Controller")
+            Component(VideoManagementStreamController, "Video Stream Controller")
+            Component(VideoManagementVideoDeviceAccessLayer, "Video Device Access Layer")
+            Component(VideoManagementVideoStorageClient, "Video Storage Client")
+            Component(VideoManagementConfigurationComponent, "Device Configuration Component")
+            Component(VideoManagementVideoStreamComponent, "Video Stream Component")
+            Component(VideoManagementCommandConsumer, "Command Consumer")
+            Component(VideoManagementDBAL, "DB Access Layer")
+
+            Rel(VideoManagementCommandConsumer, VideoManagementConfigurationComponent, "uses")
+            Rel_D(VideoManagementConfigurationComponent, VideoManagementVideoDeviceAccessLayer, "uses")
+            Rel(VideoManagementApiController, VideoManagementConfigurationComponent, "uses")
+            Rel(VideoManagementStreamController, VideoManagementVideoStreamComponent, "uses")
+            Rel(VideoManagementConfigurationComponent, VideoManagementDBAL, "uses")
+            Rel(VideoManagementDBAL, dbVideo, "read/write configuration")
+            Rel_R(VideoManagementVideoStreamComponent,VideoManagementConfigurationComponent, "uses")
+            Rel(VideoManagementVideoStreamComponent,VideoManagementVideoStorageClient, "uses")
+            Rel(VideoManagementVideoStreamComponent,VideoManagementVideoDeviceAccessLayer, "uses")
+            Rel_D(VideoManagementVideoDeviceAccessLayer, se3, "read/write", "http", "Video Streaming")
+            Rel_D(VideoManagementVideoStorageClient, dbVideoS3, "read/write", "TCP", "In order to support the Video Records as an additional feature")
+            Rel_U(VideoManagementCommandConsumer, CommandQueue, "Listen Commands", "TCP")
+        }
+
+        Container_Boundary(SwitchManagement, "Switch Device Management Service", "Java") {
+            Component(SwitchManagementApiController, "Api Controller")
+            Component(SwitchManagementDeviceAccessLayer, "Switch Device Access Layer")
+            Component(SwitchManagementConfigurationComponent, "Device Configuration Component")
+            Component(SwitchManagementCommandConsumer, "Command Consumer")
+            Component(SwitchManagementManagementDBAL, "DB Access Layer")
+
+
+            Rel(SwitchManagementApiController, SwitchManagementConfigurationComponent, "uses")
+            Rel(SwitchManagementCommandConsumer, SwitchManagementConfigurationComponent, "uses")
+            Rel_D(SwitchManagementConfigurationComponent, SwitchManagementDeviceAccessLayer , "uses")
+            Rel_D(SwitchManagementConfigurationComponent,SwitchManagementManagementDBAL,"uses")
+            Rel_D(SwitchManagementManagementDBAL,dbSwitch,"read/write", "TCP")
+            Rel_U(SwitchManagementCommandConsumer, CommandQueue, "Listen Commands", "TCP")
+            Rel_D(SwitchManagementDeviceAccessLayer, se2,  "read/write", "http", "Send Signal to Switch")
+        }
+    }
+
+}
+
+
+Rel(DeviceManagementApiComposition, DeviceServices, "read via Api Controllers", "HLS (HTTP Live Streaming) & http")
+Rel(ApiGateway,DeviceManagementApiController, "read/write", "http", "Internal Api")
+Rel(ScenarioManagement, SensorQueue, "Listen Sensor updates")
+Rel(DeviceManagementCommandComponent, CommandQueue, "Publish" , "TCP", "Publish command update configuration")
+Lay_D(SensorQueue, CommandQueue)
+
+
+@enduml

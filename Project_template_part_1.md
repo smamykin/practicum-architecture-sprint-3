@@ -192,9 +192,17 @@
 
 **Диаграмма компонентов (Components)**
 
+1. User Management Service
+
 ![Component](./User_Management.png)
 
 [Component Diagram User Management](./Component_Diagram_User_Management.puml)
+
+2. Device Management Services
+
+![Component](./Component_Diagram_Device_Management.png)
+
+[Component Diagram Device Management.puml](./Component_Diagram_Device_Management.puml)
 
 
 **Диаграмма кода (Code)**
