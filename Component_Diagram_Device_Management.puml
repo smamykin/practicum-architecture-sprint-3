@@ -21,7 +21,7 @@ Container(ApiGateway, "Api Gateway", "KrakenD","Public API")
 Container(ScenarioManagement, "Scenario Management Service", "Go")
 
 
-Boundary(asdf, "Device Management Services") {
+Boundary(b1, "Device Management Services") {
     Container_Boundary(Bus, "Message Bus") {
         ComponentQueue(SensorQueue, "Sensor Queue")
         ComponentQueue(CommandQueue, "Command Queue")
@@ -101,6 +101,7 @@ Boundary(asdf, "Device Management Services") {
 Rel(DeviceManagementApiComposition, DeviceServices, "read via Api Controllers", "HLS (HTTP Live Streaming) & http")
 Rel(ApiGateway,DeviceManagementApiController, "read/write", "http", "Internal Api")
 Rel(ScenarioManagement, SensorQueue, "Listen Sensor updates")
+Rel(ScenarioManagement, SensorQueue, "Publish Commands While running scenarios")
 Rel(DeviceManagementCommandComponent, CommandQueue, "Publish" , "TCP", "Publish command update configuration")
 Lay_D(SensorQueue, CommandQueue)
 

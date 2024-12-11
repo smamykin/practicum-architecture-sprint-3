@@ -1,0 +1,53 @@
+@startuml
+title Component Diagram Scenario Management
+
+top to bottom direction
+
+!include C4.puml
+!include C4_Container.puml
+!include C4_Context.puml
+!include C4_Component.puml
+
+
+    Container(ApiGateway, "Api Gateway", "KrakenD","Public API")
+
+    ContainerDb(dbScenario, "Scenario Management\nDB", "PostgresSQL")
+
+    Boundary(b1, "Device Management Services") {
+        Container_Boundary(Bus, "Message Bus") {
+            ComponentQueue(SensorQueue, "Sensor Queue")
+            ComponentQueue(CommandQueue, "Command Queue")
+        }
+        Container(DeviceServices, "Device Services (DeviceAdapters)", "", "Abstract Services implementing business logic and integration with Specific Device Type ")
+
+        Rel_U(DeviceServices, SensorQueue, "Publish updates", "TCP",)
+        Rel_U(DeviceServices, CommandQueue, "Listen Commands", "TCP",)
+    }
+
+    Container_Boundary(ScenarioManagement, "Scenario Management Service", "Go") {
+        Component(DBAL, "Database Access Layer")
+        Component(ScenarioController, "Scenario Controller", "REST API", "CRUD")
+        Component(TriggerController, "Trigger Controller", "REST API", "CRUD")
+        Component(EventConsumer, "Trigger Monitoring Component")
+'        Component(Configuration, "Configuration Component")
+        Component(EventProducer, "Scenario Running Component")
+
+'        Rel(Configuration, DBAL, uses)
+        Rel(EventConsumer, DBAL, uses)
+        Rel(EventProducer, DBAL, uses)
+
+'        Rel(ScenarioController, Configuration, uses)
+        Rel(TriggerController, EventConsumer, uses)
+        Rel(ScenarioController, EventProducer, uses)
+        Rel(DBAL, dbScenario,"read/write", "SQL/TCP")
+
+        Rel(EventConsumer, SensorQueue, "Listen", "TCP", "Listen Sensor Updates\n for triggering\n scenarios")
+        Rel(EventProducer, CommandQueue, "Publish", "TCP", "Publish Run Scenario Commands ")
+    }
+
+    Rel(ApiGateway,ScenarioController, "read/write", "http", "Internal Api")
+    Rel(ApiGateway,TriggerController, "read/write", "http", "Internal Api")
+
+
+
+@enduml

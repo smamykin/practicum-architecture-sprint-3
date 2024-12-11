@@ -204,6 +204,11 @@
 
 [Component Diagram Device Management.puml](./Component_Diagram_Device_Management.puml)
 
+3. Scenario Management Services
+
+![Component](./Component_Diagram_Scenario_Management.png)
+
+[Component Diagram Scenario Management.puml](./Component_Diagram_Scenario_Management.puml)
 
 **Диаграмма кода (Code)**
 
