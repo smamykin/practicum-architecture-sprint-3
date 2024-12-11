@@ -212,7 +212,9 @@
 
 **Диаграмма кода (Code)**
 
-Добавьте одну диаграмму или несколько.
+![Component](./Code_Diagram_Device_Management_Service.png)
+
+[Component Diagram Scenario Management.puml](./Code_DeviceManagementService.puml)
 
 # Задание 3. Разработка ER-диаграммы
 
