@@ -1,0 +1,67 @@
+@startuml
+title Container Diagram
+
+top to bottom direction
+
+!include C4.puml
+!include C4_Container.puml
+!include C4_Context.puml
+!include C4_Component.puml
+
+Person(p1, "User")
+Person(p2, "Support")
+
+Boundary(b1, "Экопоселок/дом") {
+    System_Ext(se1, "Устройства", "Сенсоры, Реле, Видеокамеры и т.д.")
+}
+
+Boundary(b2, "Outsource") {
+    System_Ext(se2, "Web Application", "User Interface, разрабатывается на outsource")
+}
+
+System_Boundary(b3, "Теплый Дом") {
+    Container(DeviceManagement, "Device Management Service", "", "Facade for Public API")
+    Container(ScenarioManagement, "Scenario Management Service", "")
+    Container(UserManagement, "User Management Service", "")
+    Container(ApiGateway, "Api Gateway", "Public API")
+    Container(SensorManagement, "Sensor Management Service", "")
+    Container(VideoManagement, "Video Device Management Service", "")
+    Container(SwitchManagement, "Switch Device Management Service", "")
+        ContainerQueue(Bus, "Message Bus", "", "Sensor Queue, Command Queue, etc")
+    ContainerDb(dbUser, "User Management\nDB")
+    ContainerDb(dbScenario, "Scenario Management\nDB")
+    ContainerDb(dbVideo, "Video Device Management\nDB")
+    ContainerDb(dbSensor, "Sensor Device Management\nDB")
+    ContainerDb(dbSwitch, "Switch Device Management\nDB")
+
+' region relationships
+    Rel(DeviceManagement,VideoManagement, "read", "HLS (HTTP Live Streaming) & http")
+    Rel(DeviceManagement,SwitchManagement, "read", "http")
+    Rel(UserManagement,dbUser,"read/write", "SQL/TCP")
+    Rel_R(ScenarioManagement,dbScenario,"read/write", "SQL/TCP")
+    Rel(SensorManagement,dbSensor,"read/write", "SQL/TCP")
+    Rel(VideoManagement,dbVideo,"read/write", "SQL/TCP")
+    Rel(SwitchManagement,dbSwitch,"read/write", "SQL/TCP")
+    Rel_R(ApiGateway, UserManagement, "get/refresh/validate authorisation", "http")
+    Rel(ApiGateway,ScenarioManagement, "read/write", "http", "Internal Api")
+    Rel(ApiGateway,DeviceManagement, "read/write", "http", "Internal Api")
+    Rel_U(SensorManagement, Bus, "Publish Sensor updates", "TCP",)
+    Rel(ScenarioManagement, Bus, "Listen Sensor updates", "TCP", "Listen for triggering scenarios")
+    Rel(ScenarioManagement, Bus, "Publish", "TCP", "Publish Run Scenario Command")
+    Rel(SwitchManagement, Bus, "Listen Commands", "TCP")
+    Rel(VideoManagement, Bus, "Listen Commands", "TCP")
+    Rel_L(DeviceManagement, Bus, "Listen and Publish" , "TCP", "Publish command update configuration \n/ Listen sensor update")
+    Rel(SensorManagement, se1,   "Get Sensor Data (pull query)", "http")
+    Rel(SwitchManagement, se1 , "Send Signal to Switch", "http")
+    Rel(se2, ApiGateway, "Listen sensor Update", "http")
+' endregion
+}
+
+
+Rel_D(p1, se2, "Управляет программно", "", "Просматривает телеметрию, конфигурирует, настраивает сценарии")
+Rel_D(p2, se2, "Управляет программно", "", "Возможности шире чем у user")
+'Rel_D(se2, s1, "Конфигурирование", "https", "Регистрация устройств, Создание сценариев и т.д.")
+'Rel_L(s1, se1, "Устанавливает целевые значения", "https")
+'Rel_R(se1,s1, "Отправляют статус и текущие данные", "https")
+'Rel_D(p1,se1,"Управляет физически", "", "включает в сеть, монтирует")
+@enduml
