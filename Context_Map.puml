@@ -1,0 +1,80 @@
+@startuml
+title Context Map
+
+top to bottom direction
+
+!include C4.puml
+!include C4_Container.puml
+!include C4_Context.puml
+!include C4_Component.puml
+
+Enterprise_Boundary(e1, "Теплый дом") {
+    System_Boundary(d1, "Domain: Device Management") {
+        System(d1_s, "Device Management System")
+        System_Boundary(c3, "Subdomain: Video Device Management") {
+            System(c3_s, "Video Device Management System")
+            System(s5, "Context: Video Device Registration")
+            System(s6, "Context: Video Device State Configuration")
+            System(s7, "Context: Video Streaming")
+            Rel_D(c3_s, s5, "Управлять девайсами через")
+            Rel_U(s6, s5, "Получить Конфигурацию")
+            Rel_U(s7, s5, "Получить Конфигурацию")
+        }
+
+        System_Boundary(c2, "Subdomain: Switching Device Management") {
+            System(c2_s, "Switching Device Management System")
+            System(s3, "Context: Switch Registration", "Добавление нового устройства с типом Реле")
+            System(s4, "Context: Switch State Management", "Установка целевого значения для Реле")
+            Rel_D(c2_s, s3, "Управление реле через")
+            Rel_D(s3,s4,"Обновить конфигурацию")
+        }
+        System_Boundary(c1, "Subdomain: Sensor Device Management") {
+            System(c1_s, "Sensor Management System")
+            System(s1, "Context: Sensor Registration")
+            System(s2, "Context: Sensor Data Receiving")
+            Rel_D(c1_s, s1, "Управляет девайсами Сенсорами через ")
+            Rel_D(c1_s,s2 , "получить данные через")
+            Rel_L(s2,s1 , "получает конфигурацию ")
+        }
+
+        Rel_U(c2_s, c1_s, "проверить что целевое значение достигнуто")
+'        Rel_U(c1_s, d1_s , "Передать текущие значения")
+        Rel_D(d1_s ,c1_s, "Управлять датчиками через")
+        Rel_D(d1_s ,c2_s, "Управлять Реле через")
+        Rel_D(d1_s ,c3_s, "Управлять Видео девайсами через")
+    }
+
+    System_Boundary(d2, "Domain: Scenario Management") {
+        System(d2_s, "Scenario Management System")
+        System_Boundary(c4, "Subdomain: Scenario Management") {
+            System(s8, "Context: Scenario Configuration")
+            System(s9, "Context: Scenario Running")
+        }
+        System_Boundary(c5, "Subdomain: Trigger Management") {
+            System(s10, "Context: Trigger Configuration")
+            System(s11, "Context: Trigger Monitoring")
+        }
+        Rel_D(s10, s11, "задать что нужно мониторить и какие сценарии запускать")
+        Rel_U(s9, s8, "получить сценарий для запуска")
+        Rel_L(s11, s9, "запуск сценария")
+        Rel_D(d2_s, s8, "Управляет конфигурацией сценариев через")
+        Rel_D(d2_s, s10, "Управляет конфигурацией триггеров через")
+    }
+
+    System_Boundary(d3, "Domain: User Management") {
+        System(d3_s, "User Management System")
+'        System_Boundary(c6, "Subdomain: User Management") {
+            System(s12, "Context: User Authentication")
+            System(s13, "Context: Access Control")
+'        }
+        Rel_D(d3_s, s12, "Валидация пользователя")
+        Rel_D(d3_s, s13, "Авторизация пользователя")
+    }
+    Rel_D(s9, d1_s, "Активировать устройства, установить значения")
+'    Rel_U(d1_s, s11, "Передать текущие данные с датчиков")
+    Rel_U(c1_s, s11,"Передать текущие данные с датчиков")
+    Rel_L(d2_s, d3_s, "Управление правами")
+    Rel_R(d1_s, d3_s, "Управление правами")
+}
+
+@enduml

@@ -1,0 +1,34 @@
+@startuml
+title Component Diagram User Management
+
+top to bottom direction
+
+!include C4.puml
+!include C4_Container.puml
+!include C4_Context.puml
+!include C4_Component.puml
+
+
+Container(ApiGateway, "Api Gateway", "KrakenD","Public API")
+
+Container_Boundary(UserManagement , "User Management Service") {
+
+    Component(Auth, "AuthController", "", "Регистрация пользователя, восстановление пароля, LogIn в public api, управление JWT" )
+    Component(Family, "FamilyController", "", "Создание Группы пользователей для совместного использования устройствами")
+    Component(Notification, "NotificationComponent", "", "Отправляет сообщения с подтверждением, а также сообщения связанные с безопасностью")
+    Component(AccessControl, "Access Control Component", "", "Разграничение Доступа на управление устройствами между пользователями и группами пользователей")
+}
+Component_Ext(Email_System, "Email System")
+Component_Ext(SMS_System, "SMS System")
+ContainerDb(dbUser, "User Management\nDB", "PostgresSQL")
+
+Rel(Notification, Email_System, "Send e-mail using")
+Rel(Notification, SMS_System, "Send sms using", "")
+Rel(AccessControl, dbUser, "Read from and write to", "SQL/TCP")
+Rel(Auth, Notification, "Uses")
+Rel(Auth, AccessControl, "Uses")
+Rel(Family, AccessControl, "Uses")
+Rel(ApiGateway, Auth, "Make Api calls to", "REST API")
+Rel(ApiGateway, Family, "Make Api calls to", "REST API")
+
+@enduml

@@ -1,0 +1,25 @@
+@startuml
+title Domain Model
+
+top to bottom direction
+
+!include C4.puml
+!include C4_Container.puml
+!include C4_Context.puml
+!include C4_Component.puml
+
+Enterprise_Boundary(e1, "Теплый дом") {
+    System_Boundary(s1, "Domain: Device Management") {
+        System(c1, "Subdomain: Sensor Device Management")
+        System(c2, "Subdomain: Switching Device Management")
+        System(c3, "Subdomain: Video Device Management")
+    }
+    System_Boundary(s2, "Domain: Scenario Management") {
+        System(c4, "Subdomain: Scenario Management")
+        System(c5, "Subdomain: Trigger Management")
+    }
+    System_Boundary(s3, "Domain: User Management") {
+        System(c6, "Subdomain: User Management")
+    }
+}
+@enduml

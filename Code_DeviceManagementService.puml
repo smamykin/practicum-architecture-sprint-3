@@ -1,0 +1,64 @@
+@startuml
+title Code Diagram Device Management Service
+package "Device Management Service Repository" {
+    interface HttpClientInterface {
+        +get()
+        +post()
+    }
+
+    interface CommandInterface {
+        + emit(dto CommandDto)
+    }
+    class ApiController {
+        + getDeviceConfiguration()
+        + setDeviceConfiguration()
+        + getVideoStream()
+        + setVideoStorageRules()
+        + getRoomCurrentTelemetry()
+        + getRoomHistoryTelemetry()
+        + ...()
+    }
+    class CommandComponent {
+        updateByRequestModel(model RequestModel)
+    }
+    class ApiComposition {
+        getByRequestModel(model RequestModel)
+    }
+    class SwitchDeviceServiceClient {
+        + getSwitchDeviceConfiguration()
+        + getSwitchStatus()
+        + ...()
+    }
+    class VideoDeviceServiceClient {
+        + getStream()
+        + getVideoDeviceConfiguration()
+        + ...()
+    }
+    class SensorDeviceServiceClient {
+        + getSensorStatus()
+        + getTelemetry()
+        + ...()
+    }
+}
+
+package CommandContract {
+    class CommandDto
+}
+class HttpClient
+class EventProducer
+CommandDto <- CommandComponent : creates
+HttpClientInterface <|.. HttpClient
+CommandInterface <|.left. EventProducer
+CommandComponent o-- CommandInterface
+ApiController o-- CommandComponent : используется для обновления\nконфигураций устройств
+
+ApiController o-- ApiComposition: используется для получения\nтекущих значений конфигураций устройств
+ApiComposition *-- SensorDeviceServiceClient
+ApiComposition *-- SwitchDeviceServiceClient
+ApiComposition *-- VideoDeviceServiceClient
+
+SensorDeviceServiceClient o-- HttpClientInterface
+SwitchDeviceServiceClient o-- HttpClientInterface
+VideoDeviceServiceClient o-- HttpClientInterface
+
+@enduml
